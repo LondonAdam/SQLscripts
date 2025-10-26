@@ -1,0 +1,9 @@
+select top 33 so.Name  , Rows ,  so.info as Columns
+from sysindexes as si
+inner join sysobjects as so
+on si.id = so.id
+where
+(indid = 1 or indid = 0 )
+and 
+xtype = 'U'
+order by rows desc
