@@ -1,0 +1,28 @@
+--Shows all DB file objects on a SQL server ordred by free space
+-- got this from web but can't find original author
+
+IF OBJECT_ID(N'tempdb.dbo.#xiFreeSpace', N'U') IS NOT NULL
+    DROP TABLE #xiFreeSpace;
+/*Create temp table*/
+CREATE TABLE #xiFreeSpace
+  (  name sysname
+  ,filename nvarchar (520)
+  ,FileSizeMB decimal(12,2)
+  ,SpaceUsedMB decimal(12,2)
+  ,FreeSpaceMB decimal(12,2)
+	 );
+
+DECLARE @command varchar(1000) 
+
+-- may be errors if some DBs have non standard names, e.g. include '.', but these can normally be ignored
+SELECT @command = 'USE ? Insert into #xiFreeSpace ( name , filename , FileSizeMB , SpaceUsedMB, FreeSpaceMB)
+select
+      name
+    , filename
+    , convert(decimal(12,2),round(a.size/128.000,2)) as FileSizeMB
+    , convert(decimal(12,2),round(fileproperty(a.name,''SpaceUsed'')/128.000,2)) as SpaceUsedMB
+    , convert(decimal(12,2),round((a.size-fileproperty(a.name,''SpaceUsed''))/128.000,2)) as FreeSpaceMB
+from dbo.sysfiles a' 
+EXEC sp_MSforeachdb @command 
+
+select * from #xiFreeSpace order by FreeSpaceMB desc
